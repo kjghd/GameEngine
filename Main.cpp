@@ -1,9 +1,6 @@
-#include "Graphics.h"
-#include "Audio.h"
-#include "Input.h"
-#include "Timer.h"
 #include <Windows.h>
 #include <sstream>
+#include "GameFunctions.h"
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -46,20 +43,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	);
 	ShowWindow(hWnd, nCmdShow);
 
-	// Input
-	Input input;
-
-	// Graphics
-	Graphics graphics;
-	graphics.Setup(hWnd);
-
-	// Audio
-	Audio audio;
-	audio.Setup();
-
-	// Time setup
-	Timer timer;
-	timer.Start();
+	Game_Setup(hWnd);
 
 	MSG msg{NULL};
 	while(msg.message != WM_QUIT)
@@ -70,38 +54,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 			DispatchMessage(&msg);
 		}
 
-		// Input
-		input.SetUnchanged();
-		if (msg.message == WM_KEYDOWN)
-			switch (msg.wParam)
-			{
-			case 0x41: input.SetOn(BID_A); break;
-			case 0x44: input.SetOn(BID_D); break;
-			case 0x53: input.SetOn(BID_S); break;
-			case 0x57: input.SetOn(BID_W); break;
-			}
-		if (msg.message == WM_KEYUP)
-			switch (msg.wParam)
-			{
-			case 0x41: input.SetOff(BID_A); break;
-			case 0x44: input.SetOff(BID_D); break;
-			case 0x53: input.SetOff(BID_S); break;
-			case 0x57: input.SetOff(BID_W); break;
-			}
-
-		// Logic
-		
-
-		// Graphics
-		graphics.BeginDraw();
-		graphics.ClearScreen();
-		graphics.EndDraw();
-
-		// Sound
-
-
-		// Reset timer
-		timer.Reset();
+		// Game Functions
+		Game_UpdateInput(&msg);
+		Game_UpdateLogic();
+		Game_RenderGraphics();
+		Game_PlayAudio();
+		Game_ResetTimer();
 	}
 
 	return 0;

@@ -22,13 +22,6 @@ class Input
 	};
 	std::array<Button, BID_COUNT> aButtons;
 
-public:
-	void SetUnchanged()
-	{
-		for (auto& button : aButtons)
-			button.changed = false;
-	}
-
 	void SetOn(int buttonID)
 	{
 		if (!aButtons.at(buttonID).on)
@@ -46,7 +39,33 @@ public:
 		}
 	}
 
+public:
+	void SetUnchanged()
+	{
+		for (auto& button : aButtons)
+			button.changed = false;
+	}
 
+	void SetButtonsOn(WPARAM wParam)
+	{
+		switch (wParam)
+		{
+		case 0x41: SetOn(BID_A); break;
+		case 0x44: SetOn(BID_D); break;
+		case 0x53: SetOn(BID_S); break;
+		case 0x57: SetOn(BID_W); break;
+		}
+	}
+	void SetButtonsOff(WPARAM wParam)
+	{
+		switch (wParam)
+		{
+		case 0x41: SetOff(BID_A); break;
+		case 0x44: SetOff(BID_D); break;
+		case 0x53: SetOff(BID_S); break;
+		case 0x57: SetOff(BID_W); break;
+		}
+	}
 
 	bool CheckPressed(int buttonID)
 	{
