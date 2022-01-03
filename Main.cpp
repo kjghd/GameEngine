@@ -1,8 +1,8 @@
-#include <Windows.h>
 #include "Graphics.h"
 #include "Audio.h"
 #include "Input.h"
-
+#include "Timer.h"
+#include <Windows.h>
 #include <sstream>
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -57,6 +57,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	Audio audio;
 	audio.Setup();
 
+	// Time setup
+	Timer timer;
+	timer.Start();
+
 	MSG msg{NULL};
 	while(msg.message != WM_QUIT)
 	{
@@ -92,6 +96,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		graphics.BeginDraw();
 		graphics.ClearScreen();
 		graphics.EndDraw();
+
+		// Sound
+
+
+		// Reset timer
+		timer.Reset();
 	}
 
 	return 0;
