@@ -3,9 +3,7 @@
 #include "Audio.h"
 #include "Input.h"
 
-Input input;
-Audio audio;
-Graphics graphics;
+#include <sstream>
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -18,12 +16,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
+	HRESULT hr;
+
+	// Window
 	WNDCLASSEX wc = {0};
 	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.hInstance = hInstance;
 	wc.lpszClassName = L"MainWindow";
 	wc.lpfnWndProc = WndProc;
 	RegisterClassEx(&wc);
+
+	RECT rc{ 0,0,640,480 };
+	if (0 == AdjustWindowRect(&rc, WS_CAPTION, FALSE))
+		hr = GetLastError();
 
 	HWND hWnd = CreateWindowEx(
 		NULL,
@@ -32,20 +37,25 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		WS_SYSMENU,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
-		640,
-		480,
+		rc.right - rc.left,
+		rc.bottom - rc.top,
 		NULL,
 		NULL,
 		hInstance,
 		NULL
 	);
-
 	ShowWindow(hWnd, nCmdShow);
 
-	graphics.Setup(hWnd);
-	audio.Setup();
+	// Input
+	Input input;
 
-	float colour{};
+	// Graphics
+	Graphics graphics;
+	graphics.Setup(hWnd);
+
+	// Audio
+	Audio audio;
+	audio.Setup();
 
 	MSG msg{NULL};
 	while(msg.message != WM_QUIT)
@@ -80,7 +90,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
 		// Graphics
 		graphics.BeginDraw();
-		graphics.ClearScreen(colour);
+		graphics.ClearScreen();
 		graphics.EndDraw();
 	}
 
