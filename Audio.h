@@ -15,7 +15,7 @@ class Audio
 {
 	struct AudioData
 	{
-		FOURCC fileType{};
+		DWORD fileType{};
 		WAVEFORMATEX waveFormatx = { 0 };
 		XAUDIO2_BUFFER dataBuffer = { 0 };
 	};
@@ -28,6 +28,11 @@ public:
 
 	std::array<AudioData, AID_COUNT> aAudioData;
 
+	~Audio()
+	{
+		pMasterVoice->DestroyVoice();
+		CoUninitialize();
+	}
 
 	void Setup()
 	{
@@ -44,12 +49,6 @@ public:
 				}
 			}
 		}
-	}
-
-	~Audio()
-	{
-		pMasterVoice->DestroyVoice();
-		CoUninitialize();
 	}
 
 	void LoadAudioFile(LPCWSTR lpFileName, int AudioID)
