@@ -1,5 +1,6 @@
 #include <Windows.h>
 #include <sstream>
+#include "DIPs.h"
 #include "GameFunctions.h"
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -13,8 +14,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
-	HRESULT hr;
-
 	// Window
 	WNDCLASSEX wc = {0};
 	wc.cbSize = sizeof(WNDCLASSEX);
@@ -24,8 +23,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	RegisterClassEx(&wc);
 
 	RECT rc{ 0,0,640,480 };
-	if (0 == AdjustWindowRect(&rc, WS_CAPTION, FALSE))
-		hr = GetLastError();
+	AdjustWindowRect(&rc, WS_CAPTION, FALSE);
 
 	HWND hWnd = CreateWindowEx(
 		NULL,
@@ -43,8 +41,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	);
 	ShowWindow(hWnd, nCmdShow);
 
+	// Device independant pixels
+	InitDIPs(static_cast<float>(GetDpiForWindow(hWnd)));
+
+	// Game Setup.
 	Game_Setup(hWnd);
 
+	// Main loop.
 	MSG msg{NULL};
 	while(msg.message != WM_QUIT)
 	{
@@ -61,6 +64,5 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		Game_PlayAudio();
 		Game_ResetTimer();
 	}
-
 	return 0;
 }
