@@ -9,6 +9,18 @@ class Graphics
 {
 	CComPtr<ID2D1Factory> pFactory;
 	CComPtr<ID2D1HwndRenderTarget> pRenderTarget;
+
+	float windowDPI;
+
+	float ToDIPs(float value)
+	{
+		return value * (windowDPI / 96.f);
+	}
+
+	float FromDIPs(float value)
+	{
+		return value / (windowDPI / 96.f);
+	}
 	
 public:
 	~Graphics()
@@ -31,13 +43,12 @@ public:
 					D2D1::RenderTargetProperties(),
 					D2D1::HwndRenderTargetProperties(hWnd, D2D1::SizeU(rc.right, rc.bottom)),
 					&pRenderTarget);
-
-
-				float dpi{ static_cast<float>(GetDpiForWindow(hWnd)) };
-				pRenderTarget->SetDpi(dpi,dpi);
-
 			}
 		}
+
+		// DPI
+		windowDPI = static_cast<float>(GetDpiForWindow(hWnd));
+		pRenderTarget->SetDpi(windowDPI, windowDPI);
 	}
 
 	void BeginDraw()
@@ -60,10 +71,74 @@ public:
 		pRenderTarget->Clear(D2D1::ColorF(red, green, blue));
 	}
 
-	void DrawGeometry(ID2D1Geometry* pGeometry, ID2D1Brush* pBrush)
+	void FillGeometry(ID2D1Geometry* pGeometry, ID2D1Brush* pBrush)
 	{
-		pRenderTarget->FillGeometry(pGeometry, pBrush);
+		if (pGeometry) pRenderTarget->FillGeometry(pGeometry, pBrush);
 	}
 
+	void DrawEllipse(D2D1_ELLIPSE ellipse, ID2D1Brush* pBrush)
+	{
+		ellipse = D2D1::Ellipse(
+			{ FromDIPs(ellipse.point.x), FromDIPs(ellipse.point.y) },
+			FromDIPs(ellipse.radiusX),
+			FromDIPs(ellipse.radiusY)
+		);
+		pRenderTarget->DrawEllipse(ellipse, pBrush);
+	}
+
+	void AddTerrain(ID2D1GeometryGroup** ppGeoGroup, D2D1_POINT_2F location, float size)
+	{
+		location = D2D1::Point2F(FromDIPs(location.x), FromDIPs(location.y));
+		size = FromDIPs(size);
+
+		D2D1_ELLIPSE ellipse{ D2D1::Ellipse(location, size, size) };
+		ID2D1EllipseGeometry* pEllipseGeo{};
+		pFactory->CreateEllipseGeometry(ellipse, &pEllipseGeo);
+		
+		if (*ppGeoGroup)
+		{
+			ID2D1PathGeometry* pPath{};
+			pFactory->CreatePathGeometry(&pPath);
+			ID2D1GeometrySink* pSink{};
+			pPath->Open(&pSink);
+			(*ppGeoGroup)->CombineWithGeometry(pEllipseGeo, D2D1_COMBINE_MODE_UNION, NULL, pSink);
+			pSink->Close();
+
+			ID2D1Geometry* paGeos[] = { pPath };
+			(*ppGeoGroup)->Release();
+			pFactory->CreateGeometryGroup(D2D1_FILL_MODE_WINDING, paGeos, 1, ppGeoGroup);
+		}
+		else
+		{
+			ID2D1Geometry* paGeos[] = { pEllipseGeo };
+			pFactory->CreateGeometryGroup(D2D1_FILL_MODE_WINDING, paGeos, 1, ppGeoGroup);
+		}
+
+
+	}
+
+	void EraseTerrain(ID2D1GeometryGroup** ppGeoGroup, D2D1_POINT_2F location, float size)
+	{
+		location = D2D1::Point2F(FromDIPs(location.x), FromDIPs(location.y));
+		size = FromDIPs(size);
+
+		D2D1_ELLIPSE ellipse{ D2D1::Ellipse(location, size, size) };
+		ID2D1EllipseGeometry* pEllipseGeo{};
+		pFactory->CreateEllipseGeometry(ellipse, &pEllipseGeo);
+
+		if (*ppGeoGroup)
+		{
+			ID2D1PathGeometry* pPath{};
+			pFactory->CreatePathGeometry(&pPath);
+			ID2D1GeometrySink* pSink{};
+			pPath->Open(&pSink);
+			(*ppGeoGroup)->CombineWithGeometry(pEllipseGeo, D2D1_COMBINE_MODE_EXCLUDE, NULL, pSink);
+			pSink->Close();
+
+			ID2D1Geometry* paGeos[] = { pPath };
+			(*ppGeoGroup)->Release();
+			pFactory->CreateGeometryGroup(D2D1_FILL_MODE_WINDING, paGeos, 1, ppGeoGroup);
+		}
+	}
 
 };
