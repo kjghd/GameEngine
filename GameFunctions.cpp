@@ -10,19 +10,11 @@ static Graphics graphics;
 static Audio audio;
 static Timer timer;
 
-ID2D1PathGeometry* pPath;
-ID2D1EllipseGeometry* pEllipse;
-ID2D1SolidColorBrush* pBrush;
-
-
 void Game_Setup(HWND hWnd)
 {
 	graphics.Setup(hWnd);
 	audio.Setup();
 	timer.Start();
-	graphics.GenerateTerrain(2, &pPath, hWnd);
-	graphics.CreateBrush(&pBrush, { 1,1,1,1 });
-	graphics.CreateEllipse(&pEllipse, { 0,0 }, 50);
 }
 
 void Game_UpdateInput(LPMSG lpMsg)
@@ -44,9 +36,6 @@ void Game_RenderGraphics()
 {
 	graphics.BeginDraw();
 	graphics.ClearScreen();
-	graphics.RemoveAlpha(&pPath, pEllipse, { 100,210 });
-	//graphics.DrawGeometry(pEllipse, pBrush);
-	graphics.DrawGeometry(pPath, pBrush);
 	graphics.EndDraw();
 }
 
