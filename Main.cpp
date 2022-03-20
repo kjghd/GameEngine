@@ -41,9 +41,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	);
 	ShowWindow(hWnd, nCmdShow);
 
-	// Device independant pixels
-	InitDIPs(static_cast<float>(GetDpiForWindow(hWnd)));
-
 	// Game Setup.
 	Game_Setup(hWnd);
 

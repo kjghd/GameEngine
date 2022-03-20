@@ -32,6 +32,7 @@ public:
 	{
 		pMasterVoice->DestroyVoice();
 		CoUninitialize();
+		// CComPtr's release after this. Bad. Fix it.
 	}
 
 	void Setup()
@@ -114,6 +115,7 @@ public:
 				aAudioData.at(AudioID).dataBuffer.Flags = XAUDIO2_END_OF_STREAM;
 
 				bfr = true; // Found audio data buffer.
+
 				break;
 			}
 				
