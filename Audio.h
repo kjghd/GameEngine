@@ -15,7 +15,7 @@ class Audio
 {
 	struct AudioData
 	{
-		FOURCC fileType{};
+		DWORD fileType{};
 		WAVEFORMATEX waveFormatx = { 0 };
 		XAUDIO2_BUFFER dataBuffer = { 0 };
 	};
@@ -28,6 +28,12 @@ public:
 
 	std::array<AudioData, AID_COUNT> aAudioData;
 
+	~Audio()
+	{
+		pMasterVoice->DestroyVoice();
+		CoUninitialize();
+		// CComPtr's release after this. Bad. Fix it.
+	}
 
 	void Setup()
 	{
@@ -44,12 +50,6 @@ public:
 				}
 			}
 		}
-	}
-
-	~Audio()
-	{
-		pMasterVoice->DestroyVoice();
-		CoUninitialize();
 	}
 
 	void LoadAudioFile(LPCWSTR lpFileName, int AudioID)
@@ -115,6 +115,7 @@ public:
 				aAudioData.at(AudioID).dataBuffer.Flags = XAUDIO2_END_OF_STREAM;
 
 				bfr = true; // Found audio data buffer.
+
 				break;
 			}
 				

@@ -1,11 +1,7 @@
 #include <Windows.h>
-#include "Graphics.h"
-#include "Audio.h"
-#include "Input.h"
-
-Input input;
-Audio audio;
-Graphics graphics;
+#include <sstream>
+#include "DIPs.h"
+#include "GameFunctions.h"
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -18,12 +14,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
+	// Window
 	WNDCLASSEX wc = {0};
 	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.hInstance = hInstance;
 	wc.lpszClassName = L"MainWindow";
 	wc.lpfnWndProc = WndProc;
 	RegisterClassEx(&wc);
+
+	RECT rc{ 0,0,640,480 };
+	AdjustWindowRect(&rc, WS_CAPTION, FALSE);
 
 	HWND hWnd = CreateWindowEx(
 		NULL,
@@ -32,21 +32,19 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		WS_SYSMENU,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
-		640,
-		480,
+		rc.right - rc.left,
+		rc.bottom - rc.top,
 		NULL,
 		NULL,
 		hInstance,
 		NULL
 	);
-
 	ShowWindow(hWnd, nCmdShow);
 
-	graphics.Setup(hWnd);
-	audio.Setup();
+	// Game Setup.
+	Game_Setup(hWnd);
 
-	float colour{};
-
+	// Main loop.
 	MSG msg{NULL};
 	while(msg.message != WM_QUIT)
 	{
@@ -56,33 +54,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 			DispatchMessage(&msg);
 		}
 
-		// Input
-		input.SetUnchanged();
-		if (msg.message == WM_KEYDOWN)
-			switch (msg.wParam)
-			{
-			case 0x41: input.SetOn(BID_A); break;
-			case 0x44: input.SetOn(BID_D); break;
-			case 0x53: input.SetOn(BID_S); break;
-			case 0x57: input.SetOn(BID_W); break;
-			}
-		if (msg.message == WM_KEYUP)
-			switch (msg.wParam)
-			{
-			case 0x41: input.SetOff(BID_A); break;
-			case 0x44: input.SetOff(BID_D); break;
-			case 0x53: input.SetOff(BID_S); break;
-			case 0x57: input.SetOff(BID_W); break;
-			}
-
-		// Logic
-		
-
-		// Graphics
-		graphics.BeginDraw();
-		graphics.ClearScreen(colour);
-		graphics.EndDraw();
+		// Game Functions
+		Game_UpdateInput(&msg);
+		Game_UpdateLogic();
+		Game_RenderGraphics();
+		Game_PlayAudio();
+		Game_ResetTimer();
 	}
-
 	return 0;
 }
