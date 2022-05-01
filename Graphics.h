@@ -1,27 +1,37 @@
 #pragma once
 #include "DIPs.h"
-#include<atlcomcli.h> // CComPtr
+#include <wrl.h>
+#include <atlbase.h>
 #include <d2d1.h>
+#include <d2d1_1.h>
+#include <d2d1_3.h>
+#include <d3d11.h>
+#include <dxgi1_2.h>
 #include <wincodec.h>
 #include <random>
 #pragma comment(lib, "d2d1")
-
+#pragma comment(lib, "D3D11")
+#pragma comment(lib, "Dxgi")
 
 class Graphics
 {
+	// D3D
+	ID3D11Device* pD3DDevice;
+	ID3D11DeviceContext* pD3DContext;
+
+	// DXGI
+	IDXGIDevice* pDXGIDevice;
+	IDXGISwapChain1* pDXGISwapChain;
+
+	// D2D
 	
+	ID2D1Factory1* pD2DFactory;
+	ID2D1Device* pD2DDevice;
+	ID2D1DeviceContext* pD2DContext;
+	ID2D1Bitmap1* pBackBuffer;
 
-	//CComPtr<ID2D1Factory> pFactory;
-	//CComPtr<ID2D1HwndRenderTarget> pRenderTarget;
-	//
-	//CComPtr<IWICImagingFactory> pImagingFactory;
-
-	// change to CComPtrs, these don't get released.
-	ID2D1Factory* pFactory;
-	ID2D1HwndRenderTarget* pRenderTarget;
-
+	// WIC
 	IWICImagingFactory* pImagingFactory;
-
 
 	float windowDPI;
 
@@ -45,17 +55,7 @@ public:
 		HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 		if (SUCCEEDED(hr))
 		{
-			hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &pFactory);
-			if (SUCCEEDED(hr))
-			{
-				RECT rc;
-				GetClientRect(hWnd, &rc);
-
-				hr = pFactory->CreateHwndRenderTarget(
-					D2D1::RenderTargetProperties(),
-					D2D1::HwndRenderTargetProperties(hWnd, D2D1::SizeU(rc.right, rc.bottom)),
-					&pRenderTarget);
-			}
+			hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &pD2DFactory);
 		}
 
 		if (SUCCEEDED(hr))
@@ -63,23 +63,71 @@ public:
 			hr = CoCreateInstance(CLSID_WICImagingFactory, pImagingFactory, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pImagingFactory));
 		}
 
-		// DPI
-		windowDPI = static_cast<float>(GetDpiForWindow(hWnd));
-		pRenderTarget->SetDpi(windowDPI, windowDPI);
+		if (SUCCEEDED(hr))
+		{
+			/**/
+			// Create the D3D device.
+			hr = D3D11CreateDevice(
+				NULL,
+				D3D_DRIVER_TYPE_HARDWARE,
+				NULL,
+				D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+				NULL,
+				NULL,
+				D3D11_SDK_VERSION,
+				&pD3DDevice,
+				NULL,
+				&pD3DContext
+			);
+
+			// Obtain the DXGI device from the D3D device.
+			hr = pD3DDevice->QueryInterface(&pDXGIDevice);
+
+			// Create a D2D device associated with the DXGI device.
+			hr = D2D1CreateDevice(pDXGIDevice, NULL, &pD2DDevice);
+
+			// Create D2D fevice context.
+			hr = pD2DDevice->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, &pD2DContext);
+
+
+
+			// Get the factory to create a swap chain.
+			IDXGIAdapter* pAdapter;
+			pDXGIDevice->GetAdapter(&pAdapter);
+			IDXGIFactory* pFactory;
+			pAdapter->GetParent(IID_PPV_ARGS(&pFactory));
+
+			// Description for the swapchain.
+			DXGI_SWAP_CHAIN_DESC1 swapDesc;
+
+			// Create swap chain for hWnd.
+			reinterpret_cast<IDXGIFactory2*>(pFactory)->CreateSwapChainForHwnd(
+				pDXGIDevice,
+				hWnd,
+				&swapDesc,
+				NULL,
+				NULL,
+				&pDXGISwapChain
+			);
+
+
+		}
 	}
 
 	void BeginDraw()
 	{
-		pRenderTarget->BeginDraw();
+		pD2DContext->BeginDraw();
 	}
 	void EndDraw()
 	{
-		HRESULT hr = pRenderTarget->EndDraw();
+		HRESULT hr = pD2DContext->EndDraw();
+
+		hr = pDXGISwapChain->Present(1, 0);
 	}
 
 	void TransformRenderTarget(D2D1_MATRIX_3X2_F transform)
 	{
-		pRenderTarget->SetTransform(transform);
+		pD2DContext->SetTransform(transform);
 	}
 
 	void LoadBitmapFromFile(LPCWSTR lpFileName, ID2D1Bitmap** ppBitmap)
@@ -99,33 +147,21 @@ public:
 					pFormatConverter->Initialize(pFrame, GUID_WICPixelFormat32bppPRGBA, WICBitmapDitherTypeNone, NULL, 0, WICBitmapPaletteTypeMedianCut);
 					if (SUCCEEDED(hr))
 					{
-						hr = pRenderTarget->CreateBitmapFromWicBitmap(pFormatConverter, ppBitmap);
+						hr = pD2DContext->CreateBitmapFromWicBitmap(pFormatConverter, ppBitmap);
 					}
 				}
 			}
 		}
-		//if (SUCCEEDED(hr))
-		//{
-		//	OutputDebugString(L"Loaded bitmap from file: ");
-		//	OutputDebugString(lpFileName);
-		//	OutputDebugString(L"\n");
-		//}
-		//else
-		//{
-		//	OutputDebugString(L"Failed to load bitmap from file: ");
-		//	OutputDebugString(lpFileName);
-		//	OutputDebugString(L"\n");
-		//}
 	}
 
 	void CreateBrush(ID2D1SolidColorBrush** ppBrush, D2D1_COLOR_F color)
 	{
-		pRenderTarget->CreateSolidColorBrush(color, ppBrush);
+		pD2DContext->CreateSolidColorBrush(color, ppBrush);
 	}
 
 	void ClearScreen(float red = 0, float green = 0, float blue = 0)
 	{
-		pRenderTarget->Clear(D2D1::ColorF(red, green, blue));
+		pD2DContext->Clear(D2D1::ColorF(red, green, blue));
 	}
 
 	void DrawEllipse(D2D1_ELLIPSE ellipse, ID2D1Brush* pBrush)
@@ -135,7 +171,7 @@ public:
 			FromDIPs(ellipse.radiusX),
 			FromDIPs(ellipse.radiusY)
 		);
-		pRenderTarget->DrawEllipse(ellipse, pBrush);
+		pD2DContext->DrawEllipse(ellipse, pBrush);
 	}
 	void DrawRect(D2D1_RECT_F rect, ID2D1Brush* pBrush, FLOAT strokeWidth = 1.0f)
 	{
@@ -145,7 +181,7 @@ public:
 			FromDIPs(rect.right),
 			FromDIPs(rect.bottom)
 		);
-		pRenderTarget->DrawRectangle(rect, pBrush, strokeWidth);
+		pD2DContext->DrawRectangle(rect, pBrush, strokeWidth);
 	}
 	void FillRect(D2D1_RECT_F rect, ID2D1Brush* pBrush)
 	{
@@ -155,7 +191,7 @@ public:
 			FromDIPs(rect.right),
 			FromDIPs(rect.bottom)
 		);
-		pRenderTarget->FillRectangle(rect, pBrush);
+		pD2DContext->FillRectangle(rect, pBrush);
 	}
 
 	void DrawLine(D2D1_POINT_2F startPoint, D2D1_POINT_2F endPoint, ID2D1Brush* pBrush, FLOAT strokeWidth = 1.0f)
@@ -163,7 +199,7 @@ public:
 		startPoint = { FromDIPs(startPoint.x), FromDIPs(startPoint.y) };
 		endPoint = { FromDIPs(endPoint.x), FromDIPs(endPoint.y) };
 
-		pRenderTarget->DrawLine(startPoint, endPoint, pBrush, strokeWidth);
+		pD2DContext->DrawLine(startPoint, endPoint, pBrush, strokeWidth);
 	}
 	void FillBitmap(ID2D1Bitmap* pBitmap, D2D1_RECT_F rect, float rotation)
 	{
@@ -174,8 +210,14 @@ public:
 			FromDIPs(rect.bottom)
 		};
 
-			pRenderTarget->SetTransform(D2D1::Matrix3x2F::Rotation(rotation, D2D1::Point2F(rect.left + (rect.right - rect.left) / 2.f, rect.top + (rect.bottom - rect.top) / 2.f)));
-			pRenderTarget->DrawBitmap(pBitmap, rect, 1.f, D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR);
-			pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+		//pRenderTarget->SetTransform(D2D1::Matrix3x2F::Rotation(rotation, D2D1::Point2F(rect.left + (rect.right - rect.left) / 2.f, rect.top + (rect.bottom - rect.top) / 2.f)));
+		pD2DContext->DrawBitmap(pBitmap, rect, 1.f, D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR);
+
+
+		//pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+
+
+
+
 	}
 };
