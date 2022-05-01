@@ -25,3 +25,5 @@ public:
 		deltaTime = static_cast<float>(difference.QuadPart) / static_cast<float>(frequency.QuadPart) * 1000.f; // 1000 gives time in miliseconds.
 	}
 };
+
+static Timer g_timer;
