@@ -1,5 +1,4 @@
 #pragma once
-#include "DIPs.h"
 #include <wrl.h>
 #include <atlbase.h>
 #include <d2d1.h>
