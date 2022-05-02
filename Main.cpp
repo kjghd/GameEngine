@@ -1,6 +1,5 @@
 #include <Windows.h>
 #include <sstream>
-#include "DIPs.h"
 #include "GameFunctions.h"
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
