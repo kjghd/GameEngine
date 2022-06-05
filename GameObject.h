@@ -31,7 +31,8 @@ public:
 	{
 		for (auto& pComponent : gameObject.m_vpComponents)
 		{
-			if (dynamic_cast<Sprite*>(pComponent)) AddComponent(*dynamic_cast<Sprite*>(pComponent));
+			if (dynamic_cast<SpriteSheet*>(pComponent)) AddComponent(*dynamic_cast<SpriteSheet*>(pComponent));
+			else if (dynamic_cast<Sprite*>(pComponent)) AddComponent(*dynamic_cast<Sprite*>(pComponent));
 			else if (dynamic_cast<Collision_Box*>(pComponent)) AddComponent(*dynamic_cast<Collision_Box*>(pComponent));
 			else if (dynamic_cast<Collision_Circle*>(pComponent)) AddComponent(*dynamic_cast<Collision_Circle*>(pComponent));
 			else if (dynamic_cast<View*>(pComponent)) AddComponent(*dynamic_cast<View*>(pComponent));

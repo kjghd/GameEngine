@@ -172,7 +172,13 @@ public:
 
 		for (const auto& pObject : m_vpSceneObjects)
 			for (const auto& pComponent : pObject->m_vpComponents)
-				if (dynamic_cast<Sprite*>(pComponent)) pCurrentView->Render(dynamic_cast<Sprite*>(pComponent));
+				if (dynamic_cast<SpriteSheet*>(pComponent))
+				{
+					dynamic_cast<SpriteSheet*>(pComponent)->NextFrame();
+					pCurrentView->Render(dynamic_cast<SpriteSheet*>(pComponent));
+				}
+				else if (dynamic_cast<Sprite*>(pComponent)) pCurrentView->Render(dynamic_cast<Sprite*>(pComponent));
+
 
 		for (const auto& pObject : m_vpSceneObjects)
 			for (const auto& pComponent : pObject->m_vpComponents)

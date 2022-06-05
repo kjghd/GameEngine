@@ -14,6 +14,9 @@
 
 class Graphics
 {
+	// Sprite batch test
+	ID2D1Bitmap* pBmp;
+
 	// D3D
 	ID3D11Device* pD3DDevice;
 	ID3D11DeviceContext* pD3DContext;
@@ -242,11 +245,20 @@ public:
 		//pRenderTarget->SetTransform(D2D1::Matrix3x2F::Rotation(rotation, D2D1::Point2F(rect.left + (rect.right - rect.left) / 2.f, rect.top + (rect.bottom - rect.top) / 2.f)));
 		pD2DContext->DrawBitmap(pBitmap, rect, 1.f, D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR);
 
+		//pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+	}
+	void FillBitmap(ID2D1Bitmap* pBitmap, D2D1_RECT_F rect, float rotation, D2D1_RECT_F pSourceRect)
+	{
+		rect = {
+			FromDIPs(rect.left),
+			FromDIPs(rect.top),
+			FromDIPs(rect.right),
+			FromDIPs(rect.bottom)
+		};
+
+		//pRenderTarget->SetTransform(D2D1::Matrix3x2F::Rotation(rotation, D2D1::Point2F(rect.left + (rect.right - rect.left) / 2.f, rect.top + (rect.bottom - rect.top) / 2.f)));
+		pD2DContext->DrawBitmap(pBitmap, rect, 1.f, D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR, pSourceRect);
 
 		//pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
-
-
-
-
 	}
 };

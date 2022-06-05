@@ -24,7 +24,7 @@ Scene scene;
 
 Player* player;
 GameObject* block;
-
+//GameObject* animation;
 
 void Game_Setup(HWND hWnd)
 {
@@ -32,20 +32,35 @@ void Game_Setup(HWND hWnd)
 	audio.Setup();
 	g_timer.Start();
 
+	std::vector<D2D1_RECT_F> vAnimationRects; 
+	vAnimationRects.push_back({ 0.f,	 0.f, 100.f, 100.f });
+	vAnimationRects.push_back({ 100.f,   0.f, 200.f, 100.f });
+	vAnimationRects.push_back({ 200.f,   0.f, 300.f, 100.f });
+	vAnimationRects.push_back({ 300.f,   0.f, 400.f, 100.f });
+
 	player = new Player("player", { 0,0 }, 0.01f, 100.f, &input);
 	player->AddComponent(View(&player->m_location, { 0,0 }, 64, { 640,480 }, &graphics));
-	player->AddComponent(Sprite(&player->m_location, { 0,0 }, { 1,1 }, 0, &graphics, L"Assets/Images/human.png"));
+	//player->AddComponent(Sprite(&player->m_location, { 0,0 }, { 1,1 }, 0, &graphics, L"Assets/Images/human.png"));
+
+	player->AddComponent(SpriteSheet(&player->m_location, { 0,0 }, { 1,1 }, 0, 300.f, 4, &vAnimationRects, &graphics, L"Assets/Images/sprite.png"));
 	player->AddComponent(Collision_Box(&player->m_location, { 0,0 }, true, { 1,1 }));
 
 	block = new GameObject("block", { 0,0 }, false);
 	block->AddComponent(Sprite(&block->m_location, { 0,0 }, { 1,1 }, 0, &graphics, L"Assets/Images/block.png"));
 	block->AddComponent(Collision_Box(&block->m_location, { 0,0 }, true, { 1,1 }));
 
+	//D2D1_RECT_F* pAnimationRects;
 
+
+
+	//animation = new GameObject("animation", { 0,0 }, false);
+	//animation->AddComponent(SpriteSheet(&animation->m_location, { 0,0 }, { 1,1 }, 0, 1000.f, 4, pAnimationRects, &graphics, L"Assets/Images/sprite.png"));
 
 	scene.Spawn(player);
+	//scene.Spawn(animation);
 	//scene.Spawn(block, { 2,1 });
 	//scene.Spawn(block, { -1,-1 });
+
 }
 
 void Game_UpdateInput(LPMSG lpMsg)

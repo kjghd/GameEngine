@@ -88,6 +88,36 @@ public:
 			);
 		}
 	}
+	void Render(SpriteSheet* pSpriteSheet)
+	{
+		if (pSpriteSheet->m_pBitmap)
+		{
+			D2D1_POINT_2F location_px{
+				WorldUnit_To_ScreenPoint(
+					{
+						pSpriteSheet->m_pOrigin->x + pSpriteSheet->m_offset.x - m_offset.x,
+						pSpriteSheet->m_pOrigin->y + pSpriteSheet->m_offset.y - m_offset.y
+					}
+				)
+			};
+			D2D1_POINT_2F size_px{
+				WUToPx(pSpriteSheet->m_size.width),
+				WUToPx(pSpriteSheet->m_size.height)
+			};
+
+			m_pGraphics->FillBitmap(
+				pSpriteSheet->GetBitmap(),
+				{
+					location_px.x - size_px.x / 2.f,
+					location_px.y - size_px.y / 2.f,
+					location_px.x + size_px.x / 2.f,
+					location_px.y + size_px.y / 2.f
+				},
+				pSpriteSheet->m_rotation,
+				pSpriteSheet->GetCurrentRect()
+			);
+		}
+	}
 	void RenderCollision(Collision_Base* pCollision)
 	{
 		D2D1_POINT_2F location_px{
